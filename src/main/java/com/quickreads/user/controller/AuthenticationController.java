@@ -1,6 +1,7 @@
 package com.quickreads.user.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,17 +22,11 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthenticationController {
 	
 	@Autowired
-	LoginService service;
+	private LoginService service;
 	
 	@PostMapping(value = "/authenticate", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<LoginResponse> authenticateUser(@RequestBody LoginRequest loginRequest){
 		log.info("Authenticating user : {} ", loginRequest.getUserName());
-		try {
-			service.authenticateUser(loginRequest);
-		}
-		catch(Exception e) {
-			log.error("Failed authenticating user due to : {}", e.getLocalizedMessage());
-		}
-		return null;
+		return new ResponseEntity<LoginResponse>(service.authenticateUser(loginRequest), HttpStatus.OK);
 	}
 }

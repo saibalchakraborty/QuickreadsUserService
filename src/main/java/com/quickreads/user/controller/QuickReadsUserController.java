@@ -22,15 +22,13 @@ public class QuickReadsUserController {
 
 	@Autowired
 	private QuickReadsUserService service;
+	
+	private static final String SUCCESS = "SUCCESS";
 
 	@PostMapping(value = "/createUser", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<QuickReadsUserResponse> createNewUser(@RequestBody QuickReadsUser quickReadsUser) {
-		try {
-			QuickReadsUserResponse createdUserResponse = service.createUser(quickReadsUser);
-			return new ResponseEntity<QuickReadsUserResponse>(createdUserResponse, HttpStatus.CREATED);
-		} catch (Exception e) {
-			log.error("Failed in controller : {}", e.getLocalizedMessage());
-			return new ResponseEntity<QuickReadsUserResponse>(new QuickReadsUserResponse(), HttpStatus.OK);
-		}
+		log.info("Adding user : {}", quickReadsUser);
+		QuickReadsUserResponse createdUserResponse = service.createUser(quickReadsUser);
+		return new ResponseEntity<QuickReadsUserResponse>(createdUserResponse, createdUserResponse.getStatus().equals(SUCCESS) ? HttpStatus.CREATED : HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 }
