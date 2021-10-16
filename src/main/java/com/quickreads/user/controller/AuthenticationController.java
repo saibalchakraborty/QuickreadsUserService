@@ -15,7 +15,6 @@ import com.quickreads.user.service.LoginService;
 
 import lombok.extern.slf4j.Slf4j;
 
-//TODO::Implementation of JWT
 @RestController
 @RequestMapping(value = "/v1")
 @Slf4j
