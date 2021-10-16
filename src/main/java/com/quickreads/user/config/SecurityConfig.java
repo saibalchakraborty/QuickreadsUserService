@@ -24,6 +24,20 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 	@Autowired
 	private JwtFilter filter;
 	
+	final String[] AUTH_WHITELIST = {
+            "/v2/api-docs",
+            "/swagger-resources",
+            "/swagger-resources/**",
+            "/configuration/ui",
+            "/configuration/security",
+            "/swagger-ui.html",
+            "/webjars/**",
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/v1/authenticate",
+            "/v1/createUser",
+	};
+	
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 		auth.userDetailsService(userDetailService);
@@ -34,8 +48,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 		http
 		.csrf().disable()
 		.authorizeRequests()
-		.antMatchers("/v1/authenticate").permitAll()
-		.antMatchers("/v1/createUser").permitAll()
+		.antMatchers(AUTH_WHITELIST).permitAll()
 		.anyRequest().authenticated()
 		.and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 		http.addFilterAfter(filter, UsernamePasswordAuthenticationFilter.class);
@@ -46,6 +59,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 	public AuthenticationManager authenticationManagerBean() throws Exception {
 		return super.authenticationManagerBean();
 	}
+	
 	
 	
 }
