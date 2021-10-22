@@ -3,25 +3,25 @@ info:
   description: Api Documentation
   version: '1.0'
   title: Api Documentation
-  termsOfService: urn:tos
+  termsOfService: 'urn:tos'
   contact: {}
   license:
     name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0
-host: localhost:8085
+    url: 'http://www.apache.org/licenses/LICENSE-2.0'
+host: 'localhost:8085'
 basePath: /
 tags:
   - name: authentication-controller
     description: Authentication Controller
+  - name: item-controller
+    description: Item Controller
   - name: quick-reads-user-controller
     description: Quick Reads User Controller
-  - name: welcome-controller
-    description: Welcome Controller
 paths:
-  /v1/add/welcome:
+  /v1/add/item:
     post:
       tags:
-        - welcome-controller
+        - item-controller
       summary: createWelcome
       operationId: createWelcomeUsingPOST
       consumes:
@@ -30,16 +30,16 @@ paths:
         - '*/*'
       parameters:
         - in: body
-          name: welcome
-          description: welcome
+          name: item
+          description: item
           required: true
           schema:
-            $ref: '#/definitions/Welcome'
+            $ref: '#/definitions/Item'
       responses:
         '200':
           description: OK
           schema:
-            $ref: '#/definitions/WelcomeResponse'
+            $ref: '#/definitions/ItemResponse'
         '201':
           description: Created
         '401':
@@ -108,19 +108,46 @@ paths:
           description: Forbidden
         '404':
           description: Not Found
-  /v1/welcome:
+  '/v1/item/{id}':
     get:
       tags:
-        - welcome-controller
-      summary: welcome
-      operationId: welcomeUsingGET
+        - item-controller
+      summary: getItem
+      operationId: getItemUsingGET
+      produces:
+        - application/json
+      parameters:
+        - name: id
+          in: path
+          description: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/Item'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+  /v1/items:
+    get:
+      tags:
+        - item-controller
+      summary: getAllItems
+      operationId: getAllItemsUsingGET
       produces:
         - application/json
       responses:
         '200':
           description: OK
           schema:
-            $ref: '#/definitions/Welcome'
+            type: array
+            items:
+              $ref: '#/definitions/Item'
         '401':
           description: Unauthorized
         '403':
@@ -128,6 +155,26 @@ paths:
         '404':
           description: Not Found
 definitions:
+  Item:
+    type: object
+    properties:
+      email:
+        type: string
+      itemContent:
+        type: string
+      itemName:
+        type: string
+      type:
+        type: string
+    title: Item
+  ItemResponse:
+    type: object
+    properties:
+      details:
+        type: string
+      status:
+        type: string
+    title: ItemResponse
   LoginRequest:
     type: object
     properties:
@@ -172,20 +219,3 @@ definitions:
       userType:
         type: string
     title: QuickReadsUserResponse
-  Welcome:
-    type: object
-    properties:
-      aboutQuickreads:
-        type: string
-      greetingMsg:
-        type: string
-      userCount:
-        type: integer
-        format: int64
-    title: Welcome
-  WelcomeResponse:
-    type: object
-    properties:
-      status:
-        type: string
-    title: WelcomeResponse

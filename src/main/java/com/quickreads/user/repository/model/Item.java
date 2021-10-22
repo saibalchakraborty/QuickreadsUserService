@@ -15,13 +15,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Entity
 @Builder
-public class Welcome {
+public class Item {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Integer id;
-	private String greetingMsg;
-	private String aboutQuickreads;
-	private boolean active;
+	private String itemName;
+	private String email;
+	private String type;
+	private String itemIdentifier;
 
 }

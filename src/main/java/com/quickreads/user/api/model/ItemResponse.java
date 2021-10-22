@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class WelcomeResponse {
+public class ItemResponse {
 
 	private String status;
+	private String details;
 }
