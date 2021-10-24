@@ -108,6 +108,56 @@ paths:
           description: Forbidden
         '404':
           description: Not Found
+  '/v1/deleteUser/{userId}':
+    delete:
+      tags:
+        - quick-reads-user-controller
+      summary: deleteUser
+      operationId: deleteUserUsingDELETE
+      produces:
+        - application/json
+      parameters:
+        - name: userId
+          in: query
+          description: userId
+          required: false
+          type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/GenericResponse'
+        '204':
+          description: No Content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  '/v1/getUser/{userId}':
+    get:
+      tags:
+        - quick-reads-user-controller
+      summary: getUserDetails
+      operationId: getUserDetailsUsingGET
+      produces:
+        - application/json
+      parameters:
+        - name: userId
+          in: path
+          description: userId
+          required: true
+          type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/QuickreadsUserDetails'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
   '/v1/item/{id}':
     get:
       tags:
@@ -154,7 +204,43 @@ paths:
           description: Forbidden
         '404':
           description: Not Found
+  /v1/updateUser:
+    put:
+      tags:
+        - quick-reads-user-controller
+      summary: deleteUser
+      operationId: deleteUserUsingPUT
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: quickReadsUser
+          description: quickReadsUser
+          required: true
+          schema:
+            $ref: '#/definitions/QuickReadsUser'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/GenericResponse'
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
 definitions:
+  GenericResponse:
+    type: object
+    properties:
+      responseMsg:
+        type: string
+    title: GenericResponse
   Item:
     type: object
     properties:
@@ -219,3 +305,13 @@ definitions:
       userType:
         type: string
     title: QuickReadsUserResponse
+  QuickreadsUserDetails:
+    type: object
+    properties:
+      items:
+        type: array
+        items:
+          $ref: '#/definitions/Item'
+      quickreadsUser:
+        $ref: '#/definitions/QuickReadsUser'
+    title: QuickreadsUserDetails
