@@ -6,13 +6,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
-public class Welcome {
-	
-	private String greetingMsg;
-	private Long userCount;
-	private String aboutQuickreads;
+public class GenericResponse {
 
+	private String responseMsg;
 }
