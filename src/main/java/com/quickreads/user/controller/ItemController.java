@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.quickreads.user.api.model.Item;
 import com.quickreads.user.api.model.ItemResponse;
@@ -47,8 +49,8 @@ public class ItemController {
 		}
 	}
 
-	@GetMapping(value = "/item/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Item> getItem(@PathVariable String id) {
+	@GetMapping(value = "/item", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Item> getItem(@RequestParam String id) {
 		try {
 			String item = service.getItem(id);
 			log.info("Item found ", item);
@@ -64,10 +66,26 @@ public class ItemController {
 	}
 
 	@PostMapping(value = "/add/item")
-	public ResponseEntity<ItemResponse> createWelcome(@RequestBody Item item) {
+	public ResponseEntity<ItemResponse> createItem(@RequestBody Item item) {
 		try {
 			ItemResponse response = service.addItem(item);
 			log.info("Added item {}", item);
+			if (response.getStatus().equals(SUCCESS)) {
+				return new ResponseEntity<ItemResponse>(response, HttpStatus.CREATED);
+			} else {
+				return new ResponseEntity<ItemResponse>(response, HttpStatus.OK);
+			}
+		} catch (Exception e) {
+			log.error("Failed adding item ", e.getLocalizedMessage());
+			return new ResponseEntity<ItemResponse>(ItemResponse.builder().build(), HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+	
+	@PostMapping(value = "/add/itemWithFile")
+	public ResponseEntity<ItemResponse> createItemFromFile(@RequestParam MultipartFile file, @RequestParam String email, @RequestParam String type){
+		try {
+			ItemResponse response = service.addItemWithFile(file, email, type);
+			log.info("Added item {} ", file.getOriginalFilename());
 			if (response.getStatus().equals(SUCCESS)) {
 				return new ResponseEntity<ItemResponse>(response, HttpStatus.CREATED);
 			} else {

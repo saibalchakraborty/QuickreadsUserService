@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.quickreads.user.api.model.Item;
 import com.quickreads.user.api.model.ItemResponse;
@@ -48,7 +49,7 @@ public class ItemService {
 	}
 
 	public String getItem(String id) throws Exception {
-		return s3util.getData(id);
+		return s3util.generatePreSignedUrl(id).toString();
 	}
 
 	public ItemResponse addItem(Item item) throws Exception {
@@ -63,6 +64,27 @@ public class ItemService {
 			s3util.uploadData(itemIdentifier, item.getItemContent());
 			com.quickreads.user.repository.model.Item saveItem = com.quickreads.user.repository.model.Item.builder()
 					.itemName(item.getItemName()).email(item.getEmail()).type(item.getType())
+					.itemIdentifier(itemIdentifier).build();
+			com.quickreads.user.repository.model.Item savedItem = itemRepository.save(saveItem);
+			log.info("Item saved : ", savedItem.getItemName());
+			return ItemResponse.builder().status(SUCCESS).details(itemIdentifier).build();
+		} catch (Exception e) {
+			log.error("Item addition failed ", e.getLocalizedMessage());
+			return ItemResponse.builder().status(FAILURE).details(e.getMessage()).build();
+		}
+	}
+
+	public ItemResponse addItemWithFile(MultipartFile file, String email, String type) {
+		final String itemIdentifier = file.getOriginalFilename();
+		try {
+			List<com.quickreads.user.repository.model.Item> findAll = itemRepository.findAll();
+			if (!findAll.isEmpty() && findAll.stream()
+					.anyMatch(existingItem -> existingItem.getItemIdentifier().equals(itemIdentifier))) {
+				return ItemResponse.builder().status(FAILURE).details(EXISTS).build();
+			}
+			s3util.uploadDataWithFile(itemIdentifier, file);
+			com.quickreads.user.repository.model.Item saveItem = com.quickreads.user.repository.model.Item.builder()
+					.itemName(itemIdentifier).email(email).type(type)
 					.itemIdentifier(itemIdentifier).build();
 			com.quickreads.user.repository.model.Item savedItem = itemRepository.save(saveItem);
 			log.info("Item saved : ", savedItem.getItemName());

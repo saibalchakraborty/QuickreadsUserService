@@ -22,8 +22,8 @@ paths:
     post:
       tags:
         - item-controller
-      summary: createWelcome
-      operationId: createWelcomeUsingPOST
+      summary: createItem
+      operationId: createItemUsingPOST
       consumes:
         - application/json
       produces:
@@ -35,6 +35,47 @@ paths:
           required: true
           schema:
             $ref: '#/definitions/Item'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/ItemResponse'
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+  /v1/add/itemWithFile:
+    post:
+      tags:
+        - item-controller
+      summary: createItemFromFile
+      operationId: createItemFromFileUsingPOST
+      consumes:
+        - multipart/form-data
+      produces:
+        - '*/*'
+      parameters:
+        - name: email
+          in: query
+          description: email
+          required: true
+          type: string
+        - in: body
+          name: file
+          description: file
+          required: true
+          schema:
+            type: string
+            format: binary
+        - name: type
+          in: query
+          description: type
+          required: true
+          type: string
       responses:
         '200':
           description: OK
@@ -158,7 +199,7 @@ paths:
           description: Forbidden
         '404':
           description: Not Found
-  '/v1/item/{id}':
+  /v1/item:
     get:
       tags:
         - item-controller
@@ -168,7 +209,7 @@ paths:
         - application/json
       parameters:
         - name: id
-          in: path
+          in: query
           description: id
           required: true
           type: string
