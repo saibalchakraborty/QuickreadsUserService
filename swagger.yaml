@@ -3,92 +3,19 @@ info:
   description: Api Documentation
   version: '1.0'
   title: Api Documentation
-  termsOfService: 'urn:tos'
+  termsOfService: urn:tos
   contact: {}
   license:
     name: Apache 2.0
-    url: 'http://www.apache.org/licenses/LICENSE-2.0'
-host: 'localhost:8085'
+    url: http://www.apache.org/licenses/LICENSE-2.0
+host: localhost:8085
 basePath: /
 tags:
   - name: authentication-controller
     description: Authentication Controller
-  - name: item-controller
-    description: Item Controller
   - name: quick-reads-user-controller
     description: Quick Reads User Controller
 paths:
-  /v1/add/item:
-    post:
-      tags:
-        - item-controller
-      summary: createItem
-      operationId: createItemUsingPOST
-      consumes:
-        - application/json
-      produces:
-        - '*/*'
-      parameters:
-        - in: body
-          name: item
-          description: item
-          required: true
-          schema:
-            $ref: '#/definitions/Item'
-      responses:
-        '200':
-          description: OK
-          schema:
-            $ref: '#/definitions/ItemResponse'
-        '201':
-          description: Created
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '404':
-          description: Not Found
-  /v1/add/itemWithFile:
-    post:
-      tags:
-        - item-controller
-      summary: createItemFromFile
-      operationId: createItemFromFileUsingPOST
-      consumes:
-        - multipart/form-data
-      produces:
-        - '*/*'
-      parameters:
-        - name: email
-          in: query
-          description: email
-          required: true
-          type: string
-        - in: body
-          name: file
-          description: file
-          required: true
-          schema:
-            type: string
-            format: binary
-        - name: type
-          in: query
-          description: type
-          required: true
-          type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            $ref: '#/definitions/ItemResponse'
-        '201':
-          description: Created
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '404':
-          description: Not Found
   /v1/authenticate:
     post:
       tags:
@@ -149,7 +76,7 @@ paths:
           description: Forbidden
         '404':
           description: Not Found
-  '/v1/deleteUser/{userId}':
+  /v1/deleteUser:
     delete:
       tags:
         - quick-reads-user-controller
@@ -158,10 +85,10 @@ paths:
       produces:
         - application/json
       parameters:
-        - name: userId
+        - name: id
           in: query
-          description: userId
-          required: false
+          description: id
+          required: true
           type: string
       responses:
         '200':
@@ -174,7 +101,7 @@ paths:
           description: Unauthorized
         '403':
           description: Forbidden
-  '/v1/getUser/{userId}':
+  /v1/getUser/{userId}:
     get:
       tags:
         - quick-reads-user-controller
@@ -192,53 +119,7 @@ paths:
         '200':
           description: OK
           schema:
-            $ref: '#/definitions/QuickreadsUserDetails'
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '404':
-          description: Not Found
-  /v1/item:
-    get:
-      tags:
-        - item-controller
-      summary: getItem
-      operationId: getItemUsingGET
-      produces:
-        - application/json
-      parameters:
-        - name: id
-          in: query
-          description: id
-          required: true
-          type: string
-      responses:
-        '200':
-          description: OK
-          schema:
-            $ref: '#/definitions/Item'
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '404':
-          description: Not Found
-  /v1/items:
-    get:
-      tags:
-        - item-controller
-      summary: getAllItems
-      operationId: getAllItemsUsingGET
-      produces:
-        - application/json
-      responses:
-        '200':
-          description: OK
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/Item'
+            $ref: '#/definitions/QuickReadsUserResponse'
         '401':
           description: Unauthorized
         '403':
@@ -256,6 +137,11 @@ paths:
       produces:
         - application/json
       parameters:
+        - name: id
+          in: query
+          description: id
+          required: true
+          type: string
         - in: body
           name: quickReadsUser
           description: quickReadsUser
@@ -266,7 +152,7 @@ paths:
         '200':
           description: OK
           schema:
-            $ref: '#/definitions/GenericResponse'
+            $ref: '#/definitions/QuickReadsUserResponse'
         '201':
           description: Created
         '401':
@@ -282,26 +168,6 @@ definitions:
       responseMsg:
         type: string
     title: GenericResponse
-  Item:
-    type: object
-    properties:
-      email:
-        type: string
-      itemContent:
-        type: string
-      itemName:
-        type: string
-      type:
-        type: string
-    title: Item
-  ItemResponse:
-    type: object
-    properties:
-      details:
-        type: string
-      status:
-        type: string
-    title: ItemResponse
   LoginRequest:
     type: object
     properties:
@@ -333,26 +199,24 @@ definitions:
         type: string
       userType:
         type: string
+        enum:
+          - ADMIN
+          - FREE_USER
+          - PAID_USER
     title: QuickReadsUser
   QuickReadsUserResponse:
     type: object
     properties:
       name:
         type: string
-      status:
+      responseStatus:
         type: string
       userName:
         type: string
       userType:
         type: string
+        enum:
+          - ADMIN
+          - FREE_USER
+          - PAID_USER
     title: QuickReadsUserResponse
-  QuickreadsUserDetails:
-    type: object
-    properties:
-      items:
-        type: array
-        items:
-          $ref: '#/definitions/Item'
-      quickreadsUser:
-        $ref: '#/definitions/QuickReadsUser'
-    title: QuickreadsUserDetails

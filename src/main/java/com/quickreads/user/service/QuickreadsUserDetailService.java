@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.quickreads.user.constant.UserStatus;
 import com.quickreads.user.repository.QuickReadsUserRepository;
 import com.quickreads.user.repository.model.QuickReadsUser;
 
@@ -26,7 +27,7 @@ public class QuickreadsUserDetailService implements UserDetailsService{
 		QuickReadsUser quickreadsUser = null;
 		try {
 			log.info("searching database for user : {}", username);
-			quickreadsUser = repository.getQuickreadsUser(username);
+			quickreadsUser = repository.getQuickreadsUser(username, UserStatus.ACTIVE.toString());
 		}
 		catch(Exception e) {
 			log.error("Failed getting user with error {}", e.getLocalizedMessage());
