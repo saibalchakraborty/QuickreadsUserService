@@ -1,17 +1,17 @@
 package com.quickreads.user.service;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.quickreads.user.api.model.Item;
 import com.quickreads.user.api.model.QuickReadsUser;
 import com.quickreads.user.api.model.QuickReadsUserResponse;
+import com.quickreads.user.constant.QuickReadsConstant;
+import com.quickreads.user.constant.UserStatus;
+import com.quickreads.user.constant.UserType;
 import com.quickreads.user.repository.QuickReadsUserRepository;
-import com.quickreads.user.repository.QuickreadsItemRepository;
+import com.quickreads.user.util.PasswordEncrypter;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,11 +22,7 @@ public class QuickReadsUserService {
 	@Autowired
 	private QuickReadsUserRepository userRepository;
 	@Autowired
-	private QuickreadsItemRepository itemrepository;
-
-	private static final String SUCCESS = "SUCCESS";
-	private static final String FAILURE = "FALURE";
-	private static final String USER_EXISTS = "USER_EXISTS";
+	private PasswordEncrypter passEncrypter;
 
 	/**
 	 * Used to add a new user into the system
@@ -36,22 +32,22 @@ public class QuickReadsUserService {
 	 */
 	public QuickReadsUserResponse createUser(QuickReadsUser user) {
 		try {
-			List<com.quickreads.user.repository.model.QuickReadsUser> findAll = userRepository.findAll();
-			if (findAll.stream().anyMatch(anyUser -> anyUser.getEmail().equals(user.getEmail()))) {
-				log.error("Failed saving the user : {}", USER_EXISTS);
-				return QuickReadsUserResponse.builder().name(null).userName(null).userType(null).status(USER_EXISTS)
-						.build();
+			com.quickreads.user.repository.model.QuickReadsUser anyExistingUser = userRepository.getQuickreadsUser(user.getEmail(), UserStatus.ACTIVE.toString());
+			if (Objects.nonNull(anyExistingUser)) {
+				log.error("Failed saving the user : {} due to : {}", user.getEmail(), QuickReadsConstant.USER_EXISTS);
+				return QuickReadsUserResponse.builder().responseStatus(QuickReadsConstant.USER_EXISTS.concat(" : " + user.getEmail())).build();
 			}
+			final String encodedPassword = passEncrypter.encryptPassword(user.getPassword());
 			com.quickreads.user.repository.model.QuickReadsUser quickReadsUser = com.quickreads.user.repository.model.QuickReadsUser
-					.builder().firstName(user.getFirstName()).lastName(user.getLastName()).userType(user.getUserType())
-					.email(user.getEmail()).phNumber(user.getPhNumber()).password(user.getPassword()).build();
+					.builder().firstName(user.getFirstName()).lastName(user.getLastName()).userType(user.getUserType().toString())
+					.email(user.getEmail()).phNumber(user.getPhNumber()).status(UserStatus.ACTIVE.toString()).password(encodedPassword).build();
 			com.quickreads.user.repository.model.QuickReadsUser savedUser = userRepository.save(quickReadsUser);
 			log.info("Successfully saved user : {}", savedUser);
 			return QuickReadsUserResponse.builder().name(savedUser.getFirstName() + " " + savedUser.getLastName())
-					.userName(savedUser.getEmail()).userType(savedUser.getUserType()).status(SUCCESS).build();
+					.userName(savedUser.getEmail()).userType(UserType.valueOf(savedUser.getUserType())).responseStatus(QuickReadsConstant.SUCCESS).build();
 		} catch (Exception e) {
 			log.error("Failed saving the user : {}", e.getLocalizedMessage());
-			return QuickReadsUserResponse.builder().name(null).userName(null).userType(null).status(FAILURE).build();
+			return QuickReadsUserResponse.builder().responseStatus(QuickReadsConstant.RUN_TIME_ERROR).build();
 		}
 	}
 
@@ -62,14 +58,15 @@ public class QuickReadsUserService {
 	 * @return
 	 * @throws Exception
 	 */
-	public QuickReadsUser getUser(String userId) throws Exception {
-		com.quickreads.user.repository.model.QuickReadsUser quickreadsUser = userRepository.getQuickreadsUser(userId);
-		if (Objects.nonNull(quickreadsUser)) {
-			return QuickReadsUser.builder().firstName(quickreadsUser.getFirstName())
-					.lastName(quickreadsUser.getLastName()).userType(quickreadsUser.getUserType())
-					.email(quickreadsUser.getEmail()).phNumber(quickreadsUser.getPhNumber()).build();
+	public QuickReadsUserResponse getUser(String userId) throws Exception {
+		com.quickreads.user.repository.model.QuickReadsUser quickreadsUser = userRepository.getQuickreadsUser(userId, UserStatus.ACTIVE.toString());
+		if (Objects.isNull(quickreadsUser)) {
+			log.error("No active user found with id : {}", userId);
+			return QuickReadsUserResponse.builder().responseStatus(QuickReadsConstant.USER_NOT_FOUND).build();
 		}
-		return QuickReadsUser.builder().build();
+		log.info("User found with details : {}", quickreadsUser);
+		return QuickReadsUserResponse.builder().name(quickreadsUser.getFirstName() + " " + quickreadsUser.getLastName())
+				.userName(quickreadsUser.getEmail()).userType(UserType.valueOf(quickreadsUser.getUserType())).responseStatus(QuickReadsConstant.SUCCESS).build();
 	}
 
 	/**
@@ -80,25 +77,13 @@ public class QuickReadsUserService {
 	 * @throws Exception
 	 */
 	public boolean removeUser(String userId) throws Exception {
-		// TODO: Later dont remove user from system just make status as inactive
-		return userRepository.deleteQuickreadsUser(userId);
-	}
-
-	/**
-	 * Used to retrieve all items of a user
-	 * 
-	 * @param userName
-	 * @return
-	 * @throws Exception
-	 */
-	public List<Item> getAllItems(String userName) throws Exception {
-		List<com.quickreads.user.repository.model.Item> items = itemrepository.getItems(userName);
-		List<Item> allItems = new ArrayList<>();
-		if (Objects.nonNull(items)) {
-			items.stream().forEach(
-					item -> allItems.add(Item.builder().itemName(item.getItemName()).type(item.getType()).email(item.getEmail()).build()));
+		int updationResult = userRepository.updateQuickreadsUser(UserStatus.INACTIVE.toString(), userId);
+		log.info("Updation result of the user : {} is : {}", userId, updationResult);
+		if(updationResult == 0) {
+			log.error("No user found for deletion with id : {}", userId);
+			return false;
 		}
-		return allItems;
+		return true;
 	}
 
 	/**
@@ -108,16 +93,29 @@ public class QuickReadsUserService {
 	 * @return
 	 * @throws Exception
 	 */
-	public void updateUser(QuickReadsUser quickreadsUser) throws Exception {
+	public QuickReadsUserResponse updateUser(String emailId, QuickReadsUser quickreadsUser) throws Exception {
 		com.quickreads.user.repository.model.QuickReadsUser user = userRepository
-				.getQuickreadsUser(quickreadsUser.getEmail());
-		user.setFirstName(
-				(quickreadsUser.getFirstName() == null) ? user.getFirstName() : quickreadsUser.getFirstName());
-		user.setLastName((quickreadsUser.getLastName() == null) ? user.getLastName() : quickreadsUser.getLastName());
-		user.setUserType((quickreadsUser.getUserType() == null) ? user.getUserType() : quickreadsUser.getUserType());
-		user.setEmail((quickreadsUser.getEmail() == null) ? user.getEmail() : quickreadsUser.getEmail());
-		user.setPhNumber((quickreadsUser.getPhNumber() == null) ? user.getPhNumber() : quickreadsUser.getPhNumber());
-		user.setPassword((quickreadsUser.getPassword() == null) ? user.getPassword() : quickreadsUser.getPassword());
-		userRepository.save(user);
+				.getQuickreadsUser(emailId, UserStatus.ACTIVE.toString());
+		if(Objects.nonNull(user)) {
+			user.setFirstName(
+					(quickreadsUser.getFirstName() == null) ? user.getFirstName() : quickreadsUser.getFirstName());
+			user.setLastName((quickreadsUser.getLastName() == null) ? user.getLastName() : quickreadsUser.getLastName());
+			user.setUserType((quickreadsUser.getUserType() == null) ? user.getUserType() : quickreadsUser.getUserType().toString());
+			user.setEmail((quickreadsUser.getEmail() == null) ? user.getEmail() : quickreadsUser.getEmail());
+			user.setPhNumber((quickreadsUser.getPhNumber() == null) ? user.getPhNumber() : quickreadsUser.getPhNumber());
+			user.setPassword((quickreadsUser.getPassword() == null) ? user.getPassword() : passEncrypter.encryptPassword(quickreadsUser.getPassword()));
+			com.quickreads.user.repository.model.QuickReadsUser updatedUser = userRepository.save(user);
+			log.info("Updated user details for id : {} are : {}", emailId, updatedUser);
+			return generateQuickReadsUserResponse(updatedUser);
+		}
+		else {
+			log.error("No active user found with id : {} to update", emailId);
+			return QuickReadsUserResponse.builder().responseStatus(QuickReadsConstant.USER_NOT_FOUND).build();
+		}
+	}
+	
+	private QuickReadsUserResponse generateQuickReadsUserResponse(com.quickreads.user.repository.model.QuickReadsUser quickreadsUser) {
+		return QuickReadsUserResponse.builder().name(quickreadsUser.getFirstName() + " " + quickreadsUser.getLastName())
+				.userName(quickreadsUser.getEmail()).userType(UserType.valueOf(quickreadsUser.getUserType())).responseStatus(QuickReadsConstant.SUCCESS).build();
 	}
 }
