@@ -126,7 +126,7 @@ public class QuickReadsUserService {
 	 * @return
 	 * @throws Exception
 	 */
-	public QuickReadsUserResponse updateUser(String emailId, QuickReadsUser quickreadsUser) throws Exception {
+	public QuickReadsUserResponse updateUser(String emailId, QuickReadsUser quickreadsUser) {
 		try {
 			com.quickreads.user.repository.model.QuickReadsUser user = userRepository.getQuickreadsUser(emailId, UserStatus.ACTIVE.toString());
 			if(Objects.nonNull(user)) {
