@@ -11,5 +11,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class GenericResponse {
 
+	private String responseStatus;
 	private String responseMsg;
 }

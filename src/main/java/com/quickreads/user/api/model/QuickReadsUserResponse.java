@@ -20,5 +20,5 @@ public class QuickReadsUserResponse {
 	private String userName;
 	private UserType userType;
 	private String responseStatus;
-
+	private String responseMsg;
 }

@@ -41,47 +41,28 @@ public class QuickReadsUserController {
 
 	@GetMapping(value = "/getUser/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<QuickReadsUserResponse> getUserDetails(@PathVariable String userId) {
-		try {
 			log.info("Seraching for user : {}", userId);
 			QuickReadsUserResponse userResponse = service.getUser(userId);
 			if(QuickReadsConstant.USER_NOT_FOUND.equals(userResponse.getResponseStatus())) {
 				return new ResponseEntity<QuickReadsUserResponse>(userResponse, HttpStatus.NOT_FOUND);
 			}
-			return new ResponseEntity<QuickReadsUserResponse>(userResponse, HttpStatus.OK);
-		} catch (Exception e) {
-			log.error("Failed getting user : ", e.getLocalizedMessage());
-			return new ResponseEntity<QuickReadsUserResponse>(QuickReadsUserResponse.builder().responseStatus(QuickReadsConstant.RUN_TIME_ERROR).build(), HttpStatus.INTERNAL_SERVER_ERROR);
-		}
+			return new ResponseEntity<QuickReadsUserResponse>(userResponse,
+					userResponse.getResponseStatus().equals(QuickReadsConstant.SUCCESS) ? HttpStatus.OK
+							: HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
 	@DeleteMapping(value = "/deleteUser", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<GenericResponse> deleteUser(@RequestParam("id") String emailId) {
-		try {
 			log.info("Removing user : {}", emailId);
-			boolean status = service.removeUser(emailId);
-			if (status) {
-				return new ResponseEntity<GenericResponse>(GenericResponse.builder().responseMsg(QuickReadsConstant.SUCCESS).build(),
-						HttpStatus.ACCEPTED);
-			} else {
-				return new ResponseEntity<GenericResponse>(GenericResponse.builder().responseMsg(QuickReadsConstant.FAILURE).build(),
-						HttpStatus.NOT_FOUND);
-			}
-		} catch (Exception e) {
-			log.error("Failed to remove user ", emailId);
-			return new ResponseEntity<GenericResponse>(GenericResponse.builder().responseMsg(QuickReadsConstant.FAILURE).build(),
-					HttpStatus.INTERNAL_SERVER_ERROR);
-		}
+			GenericResponse response = service.removeUser(emailId);
+			return new ResponseEntity<GenericResponse>(response, QuickReadsConstant.SUCCESS.equals(response.getResponseStatus()) ? HttpStatus.ACCEPTED 
+					: HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 	
 	@PutMapping(value = "/updateUser", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<QuickReadsUserResponse> deleteUser(@RequestParam("id") String emailId, @RequestBody QuickReadsUser quickReadsUser) {
-		try {
 			log.info("Updating user ", quickReadsUser);
 			QuickReadsUserResponse updatedUserResponse = service.updateUser(emailId, quickReadsUser);
 			return new ResponseEntity<QuickReadsUserResponse>(updatedUserResponse, HttpStatus.OK);
-		} catch (Exception e) {
-			log.error("Failed to update user ", e.getLocalizedMessage());
-			return new ResponseEntity<QuickReadsUserResponse>(QuickReadsUserResponse.builder().responseStatus(QuickReadsConstant.RUN_TIME_ERROR).build(), HttpStatus.INTERNAL_SERVER_ERROR);
-		}
 	}
 }
